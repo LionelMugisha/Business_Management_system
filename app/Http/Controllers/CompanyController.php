@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Notifications\NotifyAdmins;
+use Illuminate\Support\Facades\Notification;
 
 class CompanyController extends Controller
 {
@@ -35,14 +38,21 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $newCompany = new Company;
-        $newCompany->name = $request['name'];
-        $newCompany->address = $request['address'];
-        $newCompany->telephone = $request['telephone'];
-        $newCompany->website = $request['website'];
-        $newCompany->director = $request['director'];
-        $newCompany->logo = $request->file('logo')->store('company_logos');
-        $newCompany->save();
+        $company = new Company;
+        $company->name = $request['name'];
+        $company->address = $request['address'];
+        $company->telephone = $request['telephone'];
+        $company->website = $request['website'];
+        $company->director = $request['director'];
+        $company->logo = $request->file('logo')->store('company_logos');
+        $company->save();
+
+        $admin = User::where('name', 'admin')->get();
+
+        $notificationData = [
+            'body' => 'A new company called ' . $company['name'] . ' has been created!'
+        ];
+        Notification::send($admin, new NotifyAdmins($notificationData));
 
         return redirect('/company')->with('success', 'Company created successfully!');
     }

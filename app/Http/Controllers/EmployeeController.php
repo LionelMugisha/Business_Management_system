@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Notifications\NotifyAdmins;
+use Illuminate\Support\Facades\Notification;
 
 class EmployeeController extends Controller
 {
@@ -45,6 +48,14 @@ class EmployeeController extends Controller
         $employee->emp_start_date = $request['emp_start_date'];
         $employee['emp_number'] = Str::random(7);
         $employee->save();
+
+        $admin = User::where('name', 'admin')->get();
+
+        $notificationData = [
+            'body' => 'A new employee called ' . $employee['name'] .' '. $employee['surname'] . ' has been created!'
+        ];
+        Notification::send($admin, new NotifyAdmins($notificationData));
+
         return redirect('/employee')->with('success', 'Employee created successfully!');
     }
 

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Notifications\NotifyAdmins;
+use Illuminate\Support\Facades\Notification;
 
 class ClientController extends Controller
 {
@@ -35,15 +38,22 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        $client_data = new Client;
-        $client_data->company_id = $request['company_id'];
-        $client_data->name = $request['name'];
-        $client_data->surname = $request['surname'];
-        $client_data->address = $request['address'];
-        $client_data->telephone = $request['telephone'];
-        $client_data->save();
+        $client = new Client;
+        $client->company_id = $request['company_id'];
+        $client->name = $request['name'];
+        $client->surname = $request['surname'];
+        $client->address = $request['address'];
+        $client->telephone = $request['telephone'];
+        $client->save();
 
-        return redirect('/client')->with('success', 'Employee created successfully!');;
+        $admin = User::where('name', 'admin')->get();
+
+        $notificationData = [
+            'body' => 'A new client called ' . $client['name'] .' '. $employee['surname'] . ' has been created!'
+        ];
+        Notification::send($admin, new NotifyAdmins($notificationData));
+        
+        return redirect('/client')->with('success', 'Client created successfully!');;
     }
 
     /**
